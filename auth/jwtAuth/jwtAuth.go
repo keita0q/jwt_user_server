@@ -60,6 +60,9 @@ func (aAuth *JWTAuth) CreateToken(aID string, aPassword string) (string, error) 
 func (aAuth *JWTAuth)Authenticate(aToken string) (auth.Claim, bool, error) {
 	tClaims := &Claim{}
 	tToken, tError := jwt.ParseWithClaims(aToken, tClaims, func(tToken *jwt.Token) (interface{}, error) {
+		if _, ok := tToken.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", tToken.Header["alg"])
+		}
 		return lookupPublicKey(aAuth.publicKeyPath)
 	})
 
