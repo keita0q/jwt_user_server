@@ -1,7 +1,15 @@
 {
   "context_path": "utiver",
   "port": 8090,
-  "client_dir":"./",
-  "public_key_path":"resources/key/pub.pem",
-  "private_key_path":"resources/key/pri.pem"
+  "client_dir": "./",
+  "public_key_path": "resources/key/pub.pem",
+  "private_key_path": "resources/key/pri.pem",
+  "mail_config": {
+    "address": "localhost:25",
+    "need_auth": false,
+    "identity": "",
+    "user_name": "sender@localhost",
+    "password": "",
+    "host": ""
+  }
 }
