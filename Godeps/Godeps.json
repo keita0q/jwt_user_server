@@ -1,0 +1,27 @@
+{
+	"ImportPath": "github.com/keita0q/user_server",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/dgrijalva/jwt-go",
+			"Comment": "v3.0.0-17-g2268707",
+			"Rev": "2268707a8f0843315e2004ee4f1d021dc08baedf"
+		},
+		{
+			"ImportPath": "github.com/pressly/chi",
+			"Comment": "v2.0.0-15-gc85a546",
+			"Rev": "c85a5463d6472673cd8ed5d447b6d5e46413f140"
+		},
+		{
+			"ImportPath": "github.com/pressly/chi/middleware",
+			"Comment": "v2.0.0-15-gc85a546",
+			"Rev": "c85a5463d6472673cd8ed5d447b6d5e46413f140"
+		},
+		{
+			"ImportPath": "gopkg.in/urfave/cli.v2",
+			"Comment": "v1.18.0-258-ge485446",
+			"Rev": "e485446237011b8abac93919242e6f059ad56c87"
+		}
+	]
+}

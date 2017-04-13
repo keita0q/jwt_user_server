@@ -7,17 +7,20 @@ import (
 	"fmt"
 	"github.com/keita0q/user_server/database/sequreDB"
 	"github.com/keita0q/user_server/auth"
+	"time"
 )
 
 type JWTAuth struct {
 	database       sequreDB.SequreDB
 	publicKeyPath  string
 	privateKeyPath string
+	limitTime      time.Duration
 }
 type Config struct {
 	DB             sequreDB.SequreDB
 	PublicKeyPath  string
 	PrivateKeyPath string
+	LimitTime      time.Duration
 }
 
 func New(aConfig *Config) *JWTAuth {
@@ -25,11 +28,13 @@ func New(aConfig *Config) *JWTAuth {
 		database: aConfig.DB,
 		publicKeyPath: aConfig.PublicKeyPath,
 		privateKeyPath: aConfig.PrivateKeyPath,
+		limitTime: aConfig.LimitTime,
 	}
 }
 
 type Claim struct {
-	ID string `json:"id"`
+	ID    string `json:"id"`
+	Limit time.Time `json:"limit"`
 	jwt.StandardClaims
 }
 
@@ -42,7 +47,7 @@ func (aAuth *JWTAuth) CreateToken(aID string, aPassword string) (string, error) 
 		return "", &auth.NotFoundError{Message: aID + "は存在しません"}
 	}
 
-	tToken := jwt.NewWithClaims(jwt.SigningMethodRS256, &Claim{ID: aID})
+	tToken := jwt.NewWithClaims(jwt.SigningMethodRS256, &Claim{ID: aID, Limit: time.Now().Add(aAuth.limitTime)})
 	tKey, tError := lookupPrivateKey(aAuth.privateKeyPath)
 	if tError != nil {
 		return "", tError
@@ -60,6 +65,9 @@ func (aAuth *JWTAuth) CreateToken(aID string, aPassword string) (string, error) 
 func (aAuth *JWTAuth)Authenticate(aToken string) (auth.Claim, bool, error) {
 	tClaims := &Claim{}
 	tToken, tError := jwt.ParseWithClaims(aToken, tClaims, func(tToken *jwt.Token) (interface{}, error) {
+		if _, tOk := tToken.Method.(*jwt.SigningMethodRSA); !tOk {
+			return nil, fmt.Errorf("Unexpected signing method: %v", tToken.Header["alg"])
+		}
 		return lookupPublicKey(aAuth.publicKeyPath)
 	})
 
@@ -67,7 +75,7 @@ func (aAuth *JWTAuth)Authenticate(aToken string) (auth.Claim, bool, error) {
 		return nil, false, tError
 	}
 
-	return tClaims, true, nil
+	return tClaims, time.Now().Before(tClaims.Limit), nil
 }
 
 func lookupPrivateKey(tPath string) (*rsa.PrivateKey, error) {
