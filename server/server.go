@@ -18,16 +18,18 @@ import (
 	"github.com/keita0q/user_server/auth"
 	"github.com/keita0q/user_server/database/sequreDB"
 	"github.com/keita0q/user_server/model"
+	"github.com/keita0q/user_server/mail"
 )
 
 type Config struct {
-	ContextPath    string
-	Port           int
-	ClientDir      string
+	ContextPath string
+	Port        int
+	ClientDir   string
 
-	Database       applicationDatabase.Database
-	SequreDB       sequreDB.SequreDB
-	Auth           auth.Auth
+	Database    applicationDatabase.Database
+	SequreDB    sequreDB.SequreDB
+	Auth        auth.Auth
+	Mail        mail.Mail
 }
 
 func Run(aConfig *Config) error {
@@ -64,6 +66,24 @@ func Run(aConfig *Config) error {
 
 			// キャッシュさせない
 			tRestApiRouter.Use(middleware.NoCache)
+
+			tRestApiRouter.Post("/mail", func(aWriter http.ResponseWriter, aRequest *http.Request) {
+				tMutex.Lock()
+				defer tMutex.Unlock()
+				defer func() {
+					io.Copy(ioutil.Discard, aRequest.Body)
+					aRequest.Body.Close()
+				}()
+
+				mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n";
+				subject := "Subject: テストメール from Go!\n"
+				msg := subject + mime + "<html><body><h1>Hello World!</h1></body></html>"
+				if tError := aConfig.Mail.Send("to mail address", msg); tError != nil {
+					http.Error(aWriter, tError.Error(), http.StatusInternalServerError)
+				}
+
+				aWriter.WriteHeader(http.StatusNoContent)
+			})
 
 			tRestApiRouter.Post("/users", func(aWriter http.ResponseWriter, aRequest *http.Request) {
 				tMutex.Lock()
